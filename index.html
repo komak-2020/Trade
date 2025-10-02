@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Koxxh Coin Trading Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #270f0f, #432020, #642c2c);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.5);
+            font-size: 1.2em;
+        }
+        main { 
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        #controls {
+            flex: 0 0 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 20px;
+            background: rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+        #controls button {
+            padding: 12px;
+            font-size: 1.1em;
+            margin: 5px 0;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #ff0000, #cd0000);
+            color: white;
+            cursor: pointer;
+        }
+        #controls button:hover {
+            transform: scale(1.05);
+        }
+        #trade-info {
+            margin-top: 20px;
+        }
+        #price {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #chart-container {
+            flex: 2;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        #log {
+            flex: 1;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            overflow-y: auto;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>Balance: $<span id="balance">10</span></div>
+        <div>Holdings: <span id="holdings">0</span> Coins</div>
+        <div>Profit/Loss: $<span id="profit">0</span></div>
+        <div id="price">Price: $1</div>
+    </header>
+    <main>
+        <div id="controls">
+            <button onclick="buy()">Buy</button>
+            <button onclick="sell()">Sell</button>
+            <div id="trade-info"></div>
+        </div>
+        <div id="right-panel">
+            <div id="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
+            <div id="log"></div>
+        </div>
+    </main>
+
+    <script>
+        let balance = 10;
+        let coinPrice = 1;
+        let holdings = 0;
+        let initialBalance = 300;
+        let time = 0;
+        let priceHistory = [coinPrice];
+        let timeLabels = [time];
+
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Koxxh Coin Price',
+                    data: priceHistory,
+                    borderColor: '#00ff99',
+                    backgroundColor: 'rgba(0, 255, 153, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'Time (seconds)' } },
+                    y: { title: { display: true, text: 'Price ($)' } }
+                }
+            }
+        });
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML = `<div style="animation: fadein 0.5s;">${message}</div>` + logDiv.innerHTML;
+        }
+
+        function updateDisplay() {
+            document.getElementById('balance').innerText = balance.toFixed(2);
+            document.getElementById('price').innerText = 'Price: $' + coinPrice.toFixed(2);
+            document.getElementById('holdings').innerText = holdings;
+            let profit = (holdings * coinPrice + balance) - initialBalance;
+            document.getElementById('profit').innerText = profit.toFixed(2);
+        }
+
+        function simulatePrice() {
+            let change = (Math.random() - 0.5) * 5;
+            coinPrice += change;
+            if (coinPrice < 1) coinPrice = 1;
+            time += 10;
+            priceHistory.push(coinPrice);
+            timeLabels.push(time);
+            chart.update();
+            updateDisplay();
+        }
+
+        function buy() {
+            if (balance >= coinPrice) {
+                holdings += 1;
+                balance -= coinPrice;
+                log('💰 Bought 1 Koxxh Coin at $' + coinPrice.toFixed(2));
+            } else {
+                log('⚠️ Not enough balance to buy');
+            }
+            updateDisplay();
+        }
+
+        function sell() {
+            if (holdings > 0) {
+                holdings -= 1;
+                balance += coinPrice;
+                log('📈 Sold 1 Koxxh Coin at $' + coinPrice.toFixed(2));
+            } else {
+                log('⚠️ No holdings to sell');
+            }
+            updateDisplay();
+        }
+
+        setInterval(simulatePrice, 10000);
+
+        updateDisplay();
+    </script>
+</body>
+</html>

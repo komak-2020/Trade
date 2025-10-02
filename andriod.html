@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Koxxh Coin Trading Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #270f0f, #432020, #642c2c);
+    color: #fff;
+}
+
+header {
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    background: rgba(0,0,0,0.5);
+    font-size: 0.9em;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 60px);
+    box-sizing: border-box;
+}
+
+#controls {
+    display: flex;
+    justify-content: space-around;
+    padding: 6px;
+    background: rgba(0,0,0,0.4);
+}
+
+#controls button {
+    padding: 10px;
+    font-size: 1em;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(45deg, #ff0000, #cd0000);
+    color: white;
+    cursor: pointer;
+    flex: 1;
+    margin: 0 3px;
+}
+
+#controls button:hover {
+    transform: scale(1.05);
+}
+
+#right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+#chart-container {
+    flex: 2;
+    background: rgba(0,0,0,0.2);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+#log {
+    flex: 1;
+    background: rgba(0,0,0,0.5);
+    padding: 4px;
+    overflow-y: auto;
+    border-radius: 8px;
+    font-size: 0.8em;
+}
+
+#price {
+    font-size: 1em;
+}
+</style>
+</head>
+<body>
+<header>
+    <div>Balance: $<span id="balance">10</span></div>
+    <div>Holdings: <span id="holdings">0</span> Coins</div>
+    <div>Profit/Loss: $<span id="profit">0</span></div>
+    <div id="price">Price: $1</div>
+</header>
+
+<main>
+    <div id="controls">
+        <button onclick="buy()">Buy</button>
+        <button onclick="sell()">Sell</button>
+    </div>
+    <div id="right-panel">
+        <div id="chart-container">
+            <canvas id="priceChart"></canvas>
+        </div>
+        <div id="log"></div>
+    </div>
+</main>
+
+<script>
+let balance = 10;
+let coinPrice = 1;
+let holdings = 0;
+let initialBalance = 300;
+let time = 0;
+let priceHistory = [coinPrice];
+let timeLabels = [time];
+
+const ctx = document.getElementById('priceChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: timeLabels,
+        datasets: [{
+            label: 'Koxxh Coin Price',
+            data: priceHistory,
+            borderColor: '#00ff99',
+            backgroundColor: 'rgba(0, 255, 153, 0.2)',
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { title: { display: true, text: 'Time (seconds)' } },
+            y: { title: { display: true, text: 'Price ($)' } }
+        }
+    }
+});
+
+function log(message) {
+    const logDiv = document.getElementById('log');
+    logDiv.innerHTML = `<div>${message}</div>` + logDiv.innerHTML;
+}
+
+function updateDisplay() {
+    document.getElementById('balance').innerText = balance.toFixed(2);
+    document.getElementById('price').innerText = 'Price: $' + coinPrice.toFixed(2);
+    document.getElementById('holdings').innerText = holdings;
+    let profit = (holdings * coinPrice + balance) - initialBalance;
+    document.getElementById('profit').innerText = profit.toFixed(2);
+}
+
+function simulatePrice() {
+    let change = (Math.random() - 0.5) * 5;
+    coinPrice += change;
+    if (coinPrice < 1) coinPrice = 1;
+    time += 10;
+    priceHistory.push(coinPrice);
+    timeLabels.push(time);
+    chart.update();
+    updateDisplay();
+}
+
+function buy() {
+    if (balance >= coinPrice) {
+        holdings += 1;
+        balance -= coinPrice;
+        log('💰 Bought 1 Koxxh Coin at $' + coinPrice.toFixed(2));
+    } else {
+        log('⚠️ Not enough balance to buy');
+    }
+    updateDisplay();
+}
+
+function sell() {
+    if (holdings > 0) {
+        holdings -= 1;
+        balance += coinPrice;
+        log('📈 Sold 1 Koxxh Coin at $' + coinPrice.toFixed(2));
+    } else {
+        log('⚠️ No holdings to sell');
+    }
+    updateDisplay();
+}
+
+setInterval(simulatePrice, 10000);
+updateDisplay();
+</script>
+</body>
+</html>
